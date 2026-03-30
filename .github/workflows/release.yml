@@ -23,7 +23,14 @@ jobs:
       - name: Build binary
         run: go build -o qbittorrent-exporter .
 
-      - name: Create GitHub release
+      - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${GITHUB_REF_NAME}" qbittorrent-exporter --generate-notes
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" qbittorrent-exporter --clobber
+          else
+            gh release create "$TAG_NAME" qbittorrent-exporter --generate-notes
+          fi
